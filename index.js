@@ -1,41 +1,73 @@
-require('./bot.js'); // At the top of index.js
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
-require('dotenv').config();
+const { TwitterApi } = require('twitter-api-v2');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Twitter client
+const client = new TwitterApi({
+  appKey: process.env.X_API_KEY,
+  appSecret: process.env.X_API_SECRET,
+  accessToken: process.env.X_ACCESS_TOKEN,
+  accessSecret: process.env.X_ACCESS_SECRET,
+});
+
+// MongoDB setup
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+const MetricSchema = new mongoose.Schema({
+  timestamp: { type: Date, default: Date.now },
+  followers: Number,
+  tweets: Number,
+  interactions: Number,
+  runtime: Number, // Seconds since start
+});
+const Metric = mongoose.model('Metric', MetricSchema);
+
+// Bot start time
+const startTime = new Date();
+
+// Serve static dashboard
 app.use(express.static('public'));
 
-// MongoDB Schema
-const userSchema = new mongoose.Schema({
-  walletAddress: String,
-  twitterId: String,
-  airdropAmount: Number,
-  timestamp: { type: Date, default: Date.now }
-});
-const User = mongoose.model('User', userSchema);
-
+// Metrics endpoint
 app.get('/metrics', async (req, res) => {
   try {
-    const now = new Date();
-    const isPreLaunch = now < new Date(process.env.LAUNCH_DATE || '2025-05-30');
-    const users = await User.find();
-    const metrics = {
-      status: isPreLaunch ? 'Launch Status: Imminent' : 'STRON Launched!',
-      totalUsers: users.length,
-      totalAirdrops: users.reduce((sum, user) => sum + (user.airdropAmount || 0), 0),
-      lastPost: users.sort((a, b) => b.timestamp - a.timestamp)[0]?.timestamp || 'N/A',
-    };
-    res.json(metrics);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+    // Fetch X data
+    const user = await client.v2.me({ 'user.fields': 'public_metrics' });
+    const tweetCount = await client.v2.tweetCountRecent('#STRON');
+    const interactions = tweetCount.data.reduce((sum, day) => sum + day.tweet_count, 0); // Approximate
+    const runtime = Math.floor((new Date() - startTime) / 1000); // Seconds
+
+    // Save to MongoDB
+    const metric = new Metric({
+      followers: user.data.public_metrics.followers_count,
+      tweets: user.data.public_metrics.tweet_count,
+      interactions,
+      runtime,
+    });
+    await metric.save();
+
+    res.json({
+      followers: metric.followers,
+      tweets: metric.tweets,
+      interactions: metric.interactions,
+      runtime: metric.runtime,
+    });
+  } catch (err) {
+    console.error('Metrics error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch metrics' });
   }
 });
 
-mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => {
-    app.listen(port, () => console.log(`Server running on port ${port}`));
-  })
-  .catch(console.error);
+// Start server
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});
+
+// Run bot
+require('./bot.js');
