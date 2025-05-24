@@ -1,3 +1,4 @@
+console.log('bot.js started:', new Date());
 require('dotenv').config();
 const { TwitterApi } = require('twitter-api-v2');
 
