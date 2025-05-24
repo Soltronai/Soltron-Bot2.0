@@ -1,3 +1,4 @@
+require('./bot.js'); // At the top of index.js
 const express = require('express');
 const mongoose = require('mongoose');
 require('dotenv').config();
