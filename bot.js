@@ -1,7 +1,8 @@
-console.log('bot.js started');
 require('dotenv').config();
 const { TwitterApi } = require('twitter-api-v2');
 const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
 
 const client = new TwitterApi({
   appKey: process.env.X_API_KEY,
@@ -34,13 +35,52 @@ async function getGiphyUrl() {
   }
 }
 
+async function downloadGif(url) {
+  try {
+    const response = await axios({
+      url,
+      method: 'GET',
+      responseType: 'stream',
+    });
+    const tempPath = path.join(__dirname, 'temp.gif');
+    const writer = fs.createWriteStream(tempPath);
+    response.data.pipe(writer);
+    return new Promise((resolve, reject) => {
+      writer.on('finish', () => resolve(tempPath));
+      writer.on('error', reject);
+    });
+  } catch (err) {
+    console.error('GIF download error:', err.message);
+    return '';
+  }
+}
+
 async function postTweet() {
   try {
     const message = messages[Math.floor(Math.random() * messages.length)];
     const gifUrl = await getGiphyUrl();
-    const tweet = gifUrl ? `${message}\n${gifUrl}` : message;
-    await client.v2.tweet(tweet);
-    console.log('Posted tweet:', tweet);
+    let mediaId = '';
+
+    if (gifUrl) {
+      const gifPath = await downloadGif(gifUrl);
+      if (gifPath) {
+        try {
+          const media = await client.v1.uploadMedia(gifPath, { mimeType: 'image/gif' });
+          mediaId = media;
+          fs.unlinkSync(gifPath); // Clean up temp file
+        } catch (uploadErr) {
+          console.error('Media upload error:', uploadErr.message);
+        }
+      }
+    }
+
+    if (mediaId) {
+      await client.v1.tweet(message, { media_ids: mediaId });
+      console.log('Posted tweet with GIF:', message);
+    } else {
+      await client.v2.tweet(message);
+      console.log('Posted tweet without GIF:', message);
+    }
   } catch (err) {
     console.error('Tweet error:', err.message, err.errors || '');
   }
