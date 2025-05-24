@@ -6,32 +6,43 @@
   <title>Soltron Bot Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
-  <div class="bg-gray-800 p-8 rounded-lg shadow-lg max-w-md w-full">
-    <h1 class="text-2xl font-bold mb-6 text-center">Soltron Bot Dashboard</h1>
-    <div id="stats" class="space-y-4">
-      <p><strong>Launch Status:</strong> <span id="launchStatus">Loading...</span></p>
-      <p><strong>Total Users:</strong> <span id="totalUsers">Loading...</span></p>
-      <p><strong>Total Airdrops:</strong> <span id="totalAirdrops">Loading...</span> STRON</p>
-      <p><strong>Last Post:</strong> <span id="lastPost">Loading...</span></p>
+<body class="bg-gray-900 text-white font-sans">
+  <div class="container mx-auto p-4">
+    <h1 class="text-3xl font-bold text-center mb-6">Soltron Bot Dashboard</h1>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-gray-800 p-4 rounded-lg">
+        <h2 class="text-xl font-semibold">Followers</h2>
+        <p id="followers" class="text-2xl">Loading...</p>
+      </div>
+      <div class="bg-gray-800 p-4 rounded-lg">
+        <h2 class="text-xl font-semibold">Tweets</h2>
+        <p id="tweets" class="text-2xl">Loading...</p>
+      </div>
+      <div class="bg-gray-800 p-4 rounded-lg">
+        <h2 class="text-xl font-semibold">Interactions</h2>
+        <p id="interactions" class="text-2xl">Loading...</p>
+      </div>
+      <div class="bg-gray-800 p-4 rounded-lg">
+        <h2 class="text-xl font-semibold">Bot Runtime</h2>
+        <p id="runtime" class="text-2xl">Loading...</p>
+      </div>
     </div>
   </div>
   <script>
-    async function fetchStats() {
+    async function fetchMetrics() {
       try {
-        const response = await fetch('/api/stats');
+        const response = await fetch('/metrics');
         const data = await response.json();
-        document.getElementById('launchStatus').textContent = data.launchStatus;
-        document.getElementById('totalUsers').textContent = data.totalUsers;
-        document.getElementById('totalAirdrops').textContent = data.totalAirdrops;
-        document.getElementById('lastPost').textContent = data.lastPost === 'N/A' ? 'N/A' : new Date(data.lastPost).toLocaleString();
+        document.getElementById('followers').textContent = data.followers.toLocaleString();
+        document.getElementById('tweets').textContent = data.tweets.toLocaleString();
+        document.getElementById('interactions').textContent = data.interactions.toLocaleString();
+        document.getElementById('runtime').textContent = `${Math.floor(data.runtime / 3600)}h ${Math.floor((data.runtime % 3600) / 60)}m`;
       } catch (err) {
-        console.error('Error fetching stats:', err);
-        document.getElementById('stats').innerHTML = '<p class="text-red-500">Error loading stats</p>';
+        console.error('Fetch metrics error:', err);
       }
     }
-    fetchStats();
-    setInterval(fetchStats, 60000); // Refresh every 60 seconds
+    fetchMetrics();
+    setInterval(fetchMetrics, 60000); // Update every minute
   </script>
 </body>
 </html>
