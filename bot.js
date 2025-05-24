@@ -14,7 +14,6 @@ const messages = [
   'Soltron is coming to dominate the memecoin universe! #STRON #MarvelRivals',
   'Get ready for the STRON launch COMING SOON! #Solana #STRON',
   'You are all unbearably naive" #Solana #Meme
-  "Keep your friends rich, & keep your enemies rich, and wait to find out which is which"
 ];
 
 async function postTweet() {
