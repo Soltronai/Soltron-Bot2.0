@@ -1,3 +1,4 @@
+console.log('bot.js started');
 require('dotenv').config();
 const { TwitterApi } = require('twitter-api-v2');
 const axios = require('axios');
