@@ -1,1 +1,37 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Soltron Bot Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
+  <div class="bg-gray-800 p-8 rounded-lg shadow-lg max-w-md w-full">
+    <h1 class="text-2xl font-bold mb-6 text-center">Soltron Bot Dashboard</h1>
+    <div id="stats" class="space-y-4">
+      <p><strong>Launch Status:</strong> <span id="launchStatus">Loading...</span></p>
+      <p><strong>Total Users:</strong> <span id="totalUsers">Loading...</span></p>
+      <p><strong>Total Airdrops:</strong> <span id="totalAirdrops">Loading...</span> STRON</p>
+      <p><strong>Last Post:</strong> <span id="lastPost">Loading...</span></p>
+    </div>
+  </div>
+  <script>
+    async function fetchStats() {
+      try {
+        const response = await fetch('/api/stats');
+        const data = await response.json();
+        document.getElementById('launchStatus').textContent = data.launchStatus;
+        document.getElementById('totalUsers').textContent = data.totalUsers;
+        document.getElementById('totalAirdrops').textContent = data.totalAirdrops;
+        document.getElementById('lastPost').textContent = data.lastPost === 'N/A' ? 'N/A' : new Date(data.lastPost).toLocaleString();
+      } catch (err) {
+        console.error('Error fetching stats:', err);
+        document.getElementById('stats').innerHTML = '<p class="text-red-500">Error loading stats</p>';
+      }
+    }
+    fetchStats();
+    setInterval(fetchStats, 60000); // Refresh every 60 seconds
+  </script>
+</body>
+</html>
