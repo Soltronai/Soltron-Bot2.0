@@ -2,17 +2,13 @@
   "name": "soltron-bot",
   "version": "1.0.0",
   "description": "Bot for Soltron Coin (STRON) project",
-  "main": "bot.js",
-  "scripts": {
-    "start": "node index.js"
-  },
+  "main": "index.js",
+  "scripts": { "start": "node index.js" },
   "dependencies": {
     "dotenv": "^16.4.5",
-    "mongoose": "^8.4.1"
     "express": "^4.19.2",
+    "mongoose": "^8.4.1",
     "twitter-api-v2": "^1.16.3"
   },
-  "engines": {
-    "node": "18.x"
-  }
+  "engines": { "node": "18.x" }
 }
