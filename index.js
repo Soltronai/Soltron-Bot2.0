@@ -35,6 +35,17 @@ const startTime = new Date();
 app.use(express.static('public'));
 
 // Metrics endpoint
+// Add after /metrics endpoint
+app.get('/test-api', async (req, res) => {
+  try {
+    const user = await client.v2.me();
+    const tweetTest = await client.v2.tweet('Soltron test tweet #STRON');
+    res.json({ status: 'success', user: user.data.username, tweet: tweetTest.data });
+  } catch (err) {
+    console.error('API test error:', err.message, err.errors || '');
+    res.status(500).json({ error: err.message, details: err.errors });
+  }
+});
 app.get('/metrics', async (req, res) => {
   try {
     // Fetch X data
